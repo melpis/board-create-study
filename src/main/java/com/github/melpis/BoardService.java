@@ -73,14 +73,14 @@ class BoardService {
             board.put("title", title);
             board.put("content", content);
             board.put("register_Date", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
-
+            this.dataBase.set("board", board, seq);
             System.out.println("수정");
             printBoard(board);
         }
     }
 
     public void viewDetail(String[] aryUserInput) {
-        String seq = aryUserInput[0];
+        String seq = aryUserInput[1];
         if (seq != null && !"".equalsIgnoreCase(seq)) {
             Map<String, String> board = this.dataBase.get("board", seq);
             incrementReadCount(board);
@@ -96,7 +96,7 @@ class BoardService {
     }
 
     public void viewEdit(String[] aryUserInput) {
-        String seq = aryUserInput[0];
+        String seq = aryUserInput[1];
         if (seq != null && !"".equalsIgnoreCase(seq)) {
             Map<String, String> board = this.dataBase.get("board", seq);
             incrementReadCount(board);
@@ -106,7 +106,7 @@ class BoardService {
     }
 
     public void delete(String[] aryUserInput) {
-        String seq = aryUserInput[0];
+        String seq = aryUserInput[1];
         if (seq != null && !"".equalsIgnoreCase(seq)) {
             Map<String, String> board = this.dataBase.get("board", seq);
             this.dataBase.remove("board", board.get("seq"));

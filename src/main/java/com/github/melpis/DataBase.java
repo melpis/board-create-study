@@ -47,9 +47,9 @@ public class DataBase {
         return this.db.get(tableName).get(Integer.parseInt(seq) - 1);
     }
 
-    public void set(String tableName, Map<String, String> data, String pk, String value) {
+    public void set(String tableName, Map<String, String> data, String seq) {
         List<Map<String, String>> boardList = this.db.get(tableName);
-        int indexNum = this.index.get(tableName).get(value);
+        int indexNum = this.index.get(tableName).get(seq);
         boardList.set(indexNum, data);
 
     }
