@@ -1,5 +1,6 @@
 package com.github.melpis;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -13,7 +14,7 @@ class BoardService {
         this.dataBase = dataBase;
     }
 
-    public void viewList() {
+    public void viewList() throws IOException {
         List<Map<String, String>> boardList = this.dataBase.getList("board");
         // 목록 조회 기능
         if (boardList != null) {
@@ -23,7 +24,7 @@ class BoardService {
                 String seq = board.get("seq");
                 String title = board.get("title");
                 String content = board.get("content");
-                String registerDate = board.get("register_Date");
+                String registerDate = board.get("register_date");
                 String readCount = board.get("read_count");
                 System.out.println("" + seq + "_" + title + "_" + content + "_" + registerDate + "_" + readCount + "");
             }
@@ -36,19 +37,17 @@ class BoardService {
         System.out.println("내용 : ");
     }
 
-    public void register(String[] aryUserInput) {
+    public void register(String[] aryUserInput) throws IOException {
         String title = aryUserInput[1];
         String content = aryUserInput[2];
         if (title != null && content != null && !"".equalsIgnoreCase(title) && !"".equalsIgnoreCase(content)) {
-            Integer seq = this.dataBase.getSequence("board");
             Map<String, String> newBoard = new HashMap<>();
-            newBoard.put("seq", String.valueOf(seq));
             newBoard.put("title", title);
             newBoard.put("content", content);
-            newBoard.put("register_Date", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+            newBoard.put("register_date", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
             newBoard.put("read_count", "0");
 
-            this.dataBase.add("board", newBoard);
+            this.dataBase.save("board", newBoard);
             System.out.println("등록");
             printBoard(newBoard);
         }
@@ -59,11 +58,11 @@ class BoardService {
         System.out.println("번호: " + board.get("seq"));
         System.out.println("제목: " + board.get("title"));
         System.out.println("내용: " + board.get("content"));
-        System.out.println("등록일: " + board.get("register_Date"));
+        System.out.println("등록일: " + board.get("register_date"));
         System.out.println("조회수: " + board.get("read_count"));
     }
 
-    public void edit(String[] aryUserInput) {
+    public void edit(String[] aryUserInput) throws IOException {
         String seq = aryUserInput[1];
         String title = aryUserInput[2];
         String content = aryUserInput[3];
@@ -72,19 +71,20 @@ class BoardService {
             board.put("seq", seq);
             board.put("title", title);
             board.put("content", content);
-            board.put("register_Date", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
-            this.dataBase.set("board", board, seq);
+            board.put("register_date", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+            this.dataBase.update("board", board, seq);
             System.out.println("수정");
             printBoard(board);
         }
     }
 
-    public void viewDetail(String[] aryUserInput) {
+    public void viewDetail(String[] aryUserInput) throws IOException {
         String seq = aryUserInput[1];
         if (seq != null && !"".equalsIgnoreCase(seq)) {
             Map<String, String> board = this.dataBase.get("board", seq);
             incrementReadCount(board);
             System.out.println("상세 조회");
+            this.dataBase.update("board", board, seq);
             printBoard(board);
 
         }
@@ -95,17 +95,18 @@ class BoardService {
         board.put("read_count", String.valueOf(readCount));
     }
 
-    public void viewEdit(String[] aryUserInput) {
+    public void viewEdit(String[] aryUserInput) throws IOException {
         String seq = aryUserInput[1];
         if (seq != null && !"".equalsIgnoreCase(seq)) {
             Map<String, String> board = this.dataBase.get("board", seq);
             incrementReadCount(board);
             System.out.println("수정 화면");
+            this.dataBase.update("board", board, seq);
             printBoard(board);
         }
     }
 
-    public void delete(String[] aryUserInput) {
+    public void delete(String[] aryUserInput) throws IOException {
         String seq = aryUserInput[1];
         if (seq != null && !"".equalsIgnoreCase(seq)) {
             Map<String, String> board = this.dataBase.get("board", seq);

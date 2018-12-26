@@ -4,10 +4,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.io.PrintStream;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -40,6 +37,15 @@ public class BoardLauncherTest {
     public void restoreSystemInputOutput() {
         System.setIn(systemIn);
         System.setOut(systemOut);
+        File dataFile = new File("board");
+        if (dataFile.exists()) {
+            dataFile.delete();
+        }
+
+        File seqDataFile = new File("boardSeq");
+        if (seqDataFile.exists()) {
+            seqDataFile.delete();
+        }
     }
     @Test
     public void main() {
