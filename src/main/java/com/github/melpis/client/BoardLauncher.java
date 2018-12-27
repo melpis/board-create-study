@@ -4,12 +4,10 @@ import java.util.Scanner;
 
 
 public class BoardLauncher {
-
     public void launcher() {
         // 사용예제
         printHelpMessage();
-        DataBaseConnector dataBaseConnector = new DataBaseConnector();
-        BoardService boardService = new BoardService(dataBaseConnector);
+        BoardService boardService = new BoardService();
 
         try (Scanner scanner = new Scanner(System.in)) {
             while (true) {

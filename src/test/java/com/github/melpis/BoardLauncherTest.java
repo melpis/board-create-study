@@ -1,13 +1,15 @@
 package com.github.melpis;
 
 import com.github.melpis.client.BoardLauncher;
-import com.github.melpis.server.DataBase;
-import com.github.melpis.server.DataBaseServer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -23,8 +25,31 @@ public class BoardLauncherTest {
 
     @Before
     public void setUpOutput() {
-        DataBaseServer dataBaseServer = new DataBaseServer(new DataBase());
-        dataBaseServer.startServer();
+        try {
+            Class.forName("org.h2.Driver");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        String url = "jdbc:h2:mem:myDb;DB_CLOSE_DELAY=-1";
+
+        try (Connection con = DriverManager.getConnection(url);
+             Statement prepareStatement = con.createStatement()
+        ) {
+            String sql = "CREATE TABLE BOARD (" +
+                    "  seq integer AUTO_INCREMENT PRIMARY KEY," +
+                    "  title varchar(255), " +
+                    "  content varchar(255), " +
+                    "  register_date varchar(255), " +
+                    "  read_count  bigint"+
+                    ");";
+
+            prepareStatement.execute(sql);
+            boolean autoCommit = con.getAutoCommit();
+
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
         testOut = new ByteArrayOutputStream();
         System.setOut(new PrintStream(testOut));
     }
@@ -42,15 +67,6 @@ public class BoardLauncherTest {
     public void restoreSystemInputOutput() {
         System.setIn(systemIn);
         System.setOut(systemOut);
-        File dataFile = new File("board");
-        if (dataFile.exists()) {
-            dataFile.delete();
-        }
-
-        File seqDataFile = new File("boardSeq");
-        if (seqDataFile.exists()) {
-            seqDataFile.delete();
-        }
     }
     @Test
     public void main() {
@@ -81,38 +97,38 @@ public class BoardLauncherTest {
                 "번호: 1\n" +
                 "제목: test\n" +
                 "내용: test\n" +
-                "등록일: "+date+"\n" +
+                "등록일: " + date + "\n" +
                 "조회수: 0\n" +
                 "목록\n" +
                 "번호_제목_내용_등록일_조회수\n" +
-                "1_test_test_"+date+"_0\n" +
+                "1_test_test_" + date + "_0\n" +
                 "상세 조회\n" +
                 "번호: 1\n" +
                 "제목: test\n" +
                 "내용: test\n" +
-                "등록일: "+date+"\n" +
+                "등록일: " + date + "\n" +
                 "조회수: 1\n" +
                 "수정 화면\n" +
                 "번호: 1\n" +
                 "제목: test\n" +
                 "내용: test\n" +
-                "등록일: "+date+"\n" +
+                "등록일: " + date + "\n" +
                 "조회수: 2\n" +
                 "수정\n" +
                 "번호: 1\n" +
                 "제목: test1\n" +
                 "내용: test1\n" +
-                "등록일: "+date+"\n" +
+                "등록일: " + date + "\n" +
                 "조회수: 2\n" +
                 "삭제\n" +
                 "번호: 1\n" +
                 "제목: test1\n" +
                 "내용: test1\n" +
-                "등록일: "+date+"\n" +
+                "등록일: " + date + "\n" +
                 "조회수: 2\n" +
                 "시스템 종료\n";
 
-        assertThat(getOutput(),  is(expected));
+        assertThat(getOutput(), is(expected));
 
     }
 }

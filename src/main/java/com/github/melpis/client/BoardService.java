@@ -1,39 +1,42 @@
 package com.github.melpis.client;
 
-import java.io.IOException;
+import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 class BoardService {
-    private DataBaseConnector dataBaseConnector;
+    private static final String DRIVER_NAME = "org.h2.Driver";
+    private static final String DB_URI = "jdbc:h2:mem:myDb";
 
-    BoardService(DataBaseConnector dataBaseConnector) {
-        this.dataBaseConnector = dataBaseConnector;
-    }
 
     public void viewList() {
         try {
-            this.dataBaseConnector.connection();
-            String statement = "select seq, title, content, register_date, read_count\n" +
-                    "from board";
-            this.dataBaseConnector.executeQuery(statement);
-            System.out.println("목록");
-            System.out.println("번호_제목_내용_등록일_조회수");
-            while (this.dataBaseConnector.hasNext()) {
-                String seq = this.dataBaseConnector.getResult("seq");
-                String title = this.dataBaseConnector.getResult("title");
-                String content = this.dataBaseConnector.getResult("content");
-                String registerDate = this.dataBaseConnector.getResult("register_date");
-                String readCount = this.dataBaseConnector.getResult("read_count");
+            Class.forName(DRIVER_NAME);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("목록");
+        System.out.println("번호_제목_내용_등록일_조회수");
+
+        String sql = "select seq, title, content, register_date, read_count ";
+        sql += "from board ";
+        try (Connection connection = DriverManager.getConnection(DB_URI);
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                String seq = String.valueOf(resultSet.getInt("seq"));
+                String title = resultSet.getString("title");
+                String content = resultSet.getString("content");
+                String registerDate = resultSet.getString("register_date");
+                String readCount = String.valueOf(resultSet.getInt("read_count"));
                 System.out.println("" + seq + "_" + title + "_" + content + "_" + registerDate + "_" + readCount + "");
             }
-        } catch (IOException e) {
+
+        } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            this.dataBaseConnector.close();
         }
     }
 
@@ -50,26 +53,38 @@ class BoardService {
 
         if (title != null && content != null && !"".equalsIgnoreCase(title) && !"".equalsIgnoreCase(content)) {
             try {
-                this.dataBaseConnector.connection();
+                Class.forName(DRIVER_NAME);
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+            String sql = "insert into board(title, content, register_date, read_count) ";
+            sql += "values(?,?,?,?)";
+            try (Connection connection = DriverManager.getConnection(DB_URI);
+                 PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                int count = 0;
                 String date = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-                String statement = "insert title, content, register_date, read_count\n" +
-                        "from board\n" +
-                        "values " + title + "," + content + "," + date + "," + "0";
-                this.dataBaseConnector.execute(statement);
+                preparedStatement.setString(1, title);
+                preparedStatement.setString(2, content);
+                preparedStatement.setString(3, date);
+                preparedStatement.setInt(4, count);
+                preparedStatement.executeUpdate();
+                int seq = 0;
+                ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
+                if(generatedKeys.next()) {
+                    seq = generatedKeys.getInt("seq");
+                }
                 Map<String, String> newBoard = new HashMap<>();
-                newBoard.put("seq", this.dataBaseConnector.getResult());
+                newBoard.put("seq", String.valueOf(seq));
                 newBoard.put("title", title);
                 newBoard.put("content", content);
                 newBoard.put("register_date", date);
-                newBoard.put("read_count", "0");
+                newBoard.put("read_count", String.valueOf(count));
                 System.out.println("등록");
                 this.printBoard(newBoard);
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                this.dataBaseConnector.close();
-            }
 
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -87,75 +102,87 @@ class BoardService {
         String title = aryUserInput[2];
         String content = aryUserInput[3];
         if (seq != null && title != null && content != null && !"".equalsIgnoreCase(seq) && !"".equalsIgnoreCase(title) && !"".equalsIgnoreCase(content)) {
-            Iterator<Map<String, String>> resultSet = this.getBoard(seq);
-            String statement;
-            if (resultSet.hasNext()) {
-                Map<String, String> board = resultSet.next();
-                String date = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-                try {
-                    this.dataBaseConnector.connection();
-                    statement = "update title=" + title + "," + "content="
-                            + content + "," + "register_date=" + date + " \n" +
-                            "from board\n" +
-                            "where seq=" + seq;
-                    this.dataBaseConnector.execute(statement);
-                    board.put("seq", seq);
-                    board.put("title", title);
-                    board.put("content", content);
-                    board.put("register_date", date);
-                    System.out.println("수정");
-                    this.printBoard(board);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } finally {
-                    this.dataBaseConnector.close();
-                }
+            Map<String, String> board = this.getBoard(seq);
+
+            try {
+                Class.forName(DRIVER_NAME);
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
             }
+
+            String sql = "update board set title=?, content=?, register_date=? ";
+            sql += "where seq=? ";
+            try (Connection connection = DriverManager.getConnection(DB_URI);
+                 PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                String date = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+                preparedStatement.setString(1, title);
+                preparedStatement.setString(2, content);
+                preparedStatement.setString(3, date);
+                preparedStatement.setInt(4, Integer.parseInt(seq));
+                preparedStatement.executeUpdate();
+                board.put("seq", seq);
+                board.put("title", title);
+                board.put("content", content);
+                board.put("register_date", date);
+                System.out.println("수정");
+                this.printBoard(board);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
         }
     }
 
-    private Iterator<Map<String, String>> getBoard(String seq) {
-        Iterator<Map<String, String>> resultSet = null;
+    private Map<String, String> getBoard(String seq) {
         try {
-            this.dataBaseConnector.connection();
-            String statement = "select seq, title, content, register_date, read_count\n" +
-                    "from board\n" +
-                    "where seq=" + seq;
-            resultSet = this.dataBaseConnector.executeQuery(statement);
-        } catch (IOException e) {
+            Class.forName(DRIVER_NAME);
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
-        } finally {
-            this.dataBaseConnector.close();
         }
-        return resultSet;
+        Map<String, String> board = new HashMap<>();
+        String sql = "select seq, title, content, register_date, read_count ";
+        sql += "from board ";
+        sql += "where seq=? ";
+        try (Connection connection = DriverManager.getConnection(DB_URI);
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setInt(1, Integer.parseInt(seq));
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                board.put("seq", String.valueOf(resultSet.getInt("seq")));
+                board.put("title", resultSet.getString("title"));
+                board.put("content", resultSet.getString("content"));
+                board.put("register_date", resultSet.getString("register_date"));
+                board.put("read_count", String.valueOf(resultSet.getInt("read_count")));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return board;
     }
 
 
     public void viewDetail(String[] aryUserInput) {
         String seq = aryUserInput[1];
         if (seq != null && !"".equalsIgnoreCase(seq)) {
-            Iterator<Map<String, String>> resultSet = this.getBoard(seq);
-            if (resultSet.hasNext()) {
-                Map<String, String> board = resultSet.next();
-                this.incrementReadCountUpdate(seq, board);
-                System.out.println("상세 조회");
-                this.printBoard(board);
-            }
+            Map<String, String> board = this.getBoard(seq);
+            this.incrementReadCountUpdate(seq, board);
+            System.out.println("상세 조회");
+            this.printBoard(board);
         }
     }
 
     private void incrementReadCountUpdate(String seq, Map<String, String> board) {
-        try {
-            this.incrementReadCount(board);
-            this.dataBaseConnector.connection();
-            String statement = "update read_count=" + board.get("read_count") + "\n" +
-                    "from board\n" +
-                    "where seq=" + seq;
-            this.dataBaseConnector.execute(statement);
-        } catch (IOException e) {
+        this.incrementReadCount(board);
+        String sql = "update board set read_count=? ";
+        sql += "where seq=? ";
+        try (Connection connection = DriverManager.getConnection(DB_URI);
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setInt(1, Integer.parseInt(board.get("read_count")));
+            preparedStatement.setInt(2, Integer.parseInt(seq));
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            this.dataBaseConnector.close();
         }
     }
 
@@ -167,48 +194,28 @@ class BoardService {
     public void viewEdit(String[] aryUserInput) {
         String seq = aryUserInput[1];
         if (seq != null && !"".equalsIgnoreCase(seq)) {
-            Iterator<Map<String, String>> resultSet = this.getBoard(seq);
-            if (resultSet.hasNext()) {
-                Map<String, String> board = resultSet.next();
-                this.incrementReadCountUpdate(seq, board);
-                System.out.println("수정 화면");
-                this.printBoard(board);
-            }
+            Map<String, String> board = this.getBoard(seq);
+            this.incrementReadCountUpdate(seq, board);
+            System.out.println("수정 화면");
+            this.printBoard(board);
         }
     }
 
     public void delete(String[] aryUserInput) {
         String seq = aryUserInput[1];
         if (seq != null && !"".equalsIgnoreCase(seq)) {
-            Map<String, String> board = null;
-            try {
-                this.dataBaseConnector.connection();
-                String statement = "select seq, title, content, register_date, read_count\n" +
-                        "from board\n" +
-                        "where seq=" + seq;
-                Iterator<Map<String, String>> resultSet = this.dataBaseConnector.executeQuery(statement);
-                if (resultSet.hasNext()) {
-                    board = resultSet.next();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                this.dataBaseConnector.close();
-            }
-
+            Map<String, String> board = this.getBoard(seq);
             if (board != null) {
-                try {
-                    this.dataBaseConnector.connection();
-                    String statement = "delete \n" +
-                            "from board \n" +
-                            "where seq=" + seq;
-                    this.dataBaseConnector.execute(statement);
+                String sql = "delete from board ";
+                sql += "where seq=? ";
+                try (Connection connection = DriverManager.getConnection(DB_URI);
+                     PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                    preparedStatement.setInt(1, Integer.parseInt(seq));
+                    preparedStatement.executeUpdate();
                     System.out.println("삭제");
                     this.printBoard(board);
-                } catch (IOException e) {
+                } catch (SQLException e) {
                     e.printStackTrace();
-                } finally {
-                    this.dataBaseConnector.close();
                 }
             }
         }
