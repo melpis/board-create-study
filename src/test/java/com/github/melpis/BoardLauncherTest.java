@@ -1,5 +1,8 @@
 package com.github.melpis;
 
+import com.github.melpis.client.BoardLauncher;
+import com.github.melpis.server.DataBase;
+import com.github.melpis.server.DataBaseServer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,6 +23,8 @@ public class BoardLauncherTest {
 
     @Before
     public void setUpOutput() {
+        DataBaseServer dataBaseServer = new DataBaseServer(new DataBase());
+        dataBaseServer.startServer();
         testOut = new ByteArrayOutputStream();
         System.setOut(new PrintStream(testOut));
     }

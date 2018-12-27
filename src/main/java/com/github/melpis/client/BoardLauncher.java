@@ -1,4 +1,4 @@
-package com.github.melpis;
+package com.github.melpis.client;
 
 import java.util.Scanner;
 
@@ -8,11 +8,8 @@ public class BoardLauncher {
     public void launcher() {
         // 사용예제
         printHelpMessage();
-
-        DataBase dataBase = new DataBase();
-        dataBase.createTable("board");
-
-        BoardService boardService = new BoardService(dataBase);
+        DataBaseConnector dataBaseConnector = new DataBaseConnector();
+        BoardService boardService = new BoardService(dataBaseConnector);
 
         try (Scanner scanner = new Scanner(System.in)) {
             while (true) {
