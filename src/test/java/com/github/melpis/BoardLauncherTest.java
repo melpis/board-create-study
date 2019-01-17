@@ -44,8 +44,6 @@ public class BoardLauncherTest {
                     ");";
 
             prepareStatement.execute(sql);
-            boolean autoCommit = con.getAutoCommit();
-
 
         } catch (SQLException ex) {
             ex.printStackTrace();

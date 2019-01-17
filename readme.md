@@ -13,9 +13,8 @@
 ### 5. jsp
 ### 6. spring mvc
 ### 7. jpa
-### 8. ajax
-### 9. spring boot
-### 10. etc front-end framework
+### 8. spring boot
+### 9. etc front-end framework
 
 ## 2. 기능 목록
 ### 1.1. 목록 기능
