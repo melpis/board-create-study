@@ -11,9 +11,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RunWith(SpringRunner.class)
 @DataJpaTest
 public class BoardTest {
+
     @Autowired
     private TestEntityManager entityManager;
-
+    // Exception Test
     @Test
     public void saveShouldPersistData() {
         Board board = this.entityManager.persistFlushFind(new Board("subject", "content"));

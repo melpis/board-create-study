@@ -2,6 +2,7 @@ package com.github.board.domain;
 
 import com.github.comment.Comment;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
@@ -10,6 +11,7 @@ import java.util.List;
 
 @Entity
 @Getter @Setter
+@NoArgsConstructor
 public class Board {
     @Id @GeneratedValue
     private Long id;
@@ -19,9 +21,7 @@ public class Board {
     private String content;
 
     private int readCount;
-    public Board(){
 
-    }
     public Board(String subject, String content){
         this.subject = subject;
         this.content = content;
