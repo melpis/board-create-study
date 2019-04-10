@@ -1,4 +1,4 @@
-package com.github.board;
+package com.github.board.service;
 
 import com.github.board.domain.Board;
 import com.github.board.repository.BoardRepository;
@@ -16,12 +16,6 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     public void save(Board board) {
-        this.boardRepository.save(board);
-    }
-
-    @Override
-    public void update(Board board) {
-        board.increaseReadCount();
         this.boardRepository.save(board);
     }
 

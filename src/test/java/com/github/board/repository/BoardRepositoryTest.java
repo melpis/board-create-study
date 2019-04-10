@@ -27,4 +27,16 @@ public class BoardRepositoryTest {
         assertThat(board.getSubject()).isEqualTo("subject");
         assertThat(board.getContent()).isEqualTo("content");
     }
+
+    @Test
+    public void deleteBoard(){
+        Board persist = this.entityManager.persist(new Board("subject", "content"));
+        Board board = this.boardRepository.findBySubject("subject");
+        assertThat(board.getSubject()).isEqualTo("subject");
+        assertThat(board.getContent()).isEqualTo("content");
+
+        this.boardRepository.deleteById(persist.getId());
+        board = this.boardRepository.findBySubject("subject");
+        assertThat(board).isNull();
+    }
 }

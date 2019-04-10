@@ -1,4 +1,4 @@
-package com.github.board;
+package com.github.board.service;
 
 import com.github.board.domain.Board;
 
@@ -6,8 +6,6 @@ import java.util.List;
 
 public interface BoardService {
     void save(Board board);
-
-    void update(Board board);
 
     void remove(Long id);
 

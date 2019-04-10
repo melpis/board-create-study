@@ -1,18 +1,22 @@
 package com.github.board.domain;
 
 import com.github.comment.Comment;
+import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.util.Assert;
 
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Getter @Setter
+@Data
 @NoArgsConstructor
+
 public class Board {
+
     @Id @GeneratedValue
     private Long id;
 
@@ -23,10 +27,12 @@ public class Board {
     private int readCount;
 
     public Board(String subject, String content){
+        Assert.hasLength(subject, "Subject must not be empty");
         this.subject = subject;
         this.content = content;
         this.readCount = 0;
     }
+
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
     private List<Comment> comments = new ArrayList<>();
 
